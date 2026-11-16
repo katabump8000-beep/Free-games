@@ -1,0 +1,17 @@
+{
+  "appId": "com.freegames.app",
+  "appName": "Free Games",
+  "webDir": "public",
+  "bundledWebRuntime": false,
+  "backgroundColor": "#0a0505",
+
+  "_comment_server": "بعد نشر موقعك على Firebase Hosting، استبدل url بالرابط الحقيقي (مثال: https://your-project.web.app). هذا يجعل التطبيق يحمّل الواجهة من سيرفرك في كل مرة يفتح فيها، بدل تخزينها داخل ملف APK — فإعادة تعديل الـ APK نفسه لا تغيّر شيئا لأن المحتوى الفعلي يأتي من عندك مباشرة في كل تشغيل.",
+  "server": {
+    "url": "https://ضع-رابط-موقعك-هنا.web.app",
+    "cleartext": false
+  },
+
+  "android": {
+    "allowMixedContent": false
+  }
+}

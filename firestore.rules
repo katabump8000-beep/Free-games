@@ -1,0 +1,61 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() { return request.auth != null; }
+    function isAdmin() { return isSignedIn() && request.auth.token.admin == true; }
+    function isOwner(uid) { return isSignedIn() && request.auth.uid == uid; }
+
+    // بيانات المستخدم: يقرأ المستخدم بياناته فقط، ولا يستطيع أي مستخدم
+    // (حتى صاحب الحساب نفسه) تعديل النقاط أو حالة الحظر مباشرة.
+    // كل تعديل على points / banned / nextSpinAt يتم فقط عبر Cloud Functions
+    // بصلاحية Admin SDK التي لا تخضع لهذه القواعد.
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if isOwner(uid);
+      allow update, delete: if false; // ممنوع كتابيا من العميل نهائيا
+    }
+
+    // إعدادات عامة (العجلة، الإعلانات، قائمة الاستبدال): قراءة للجميع،
+    // وكتابة فقط عبر Cloud Functions (admin-only callables).
+    match /config/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // طلبات الاستبدال: المستخدم يرى طلباته فقط، الإنشاء والتعديل عبر الدوال فقط.
+    match /redemptions/{id} {
+      allow read: if isSignedIn() && (resource.data.uid == request.auth.uid || isAdmin());
+      allow write: if false;
+    }
+
+    // البطولات: قراءة للجميع، كتابة فقط عبر الدوال.
+    match /tournaments/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // التنبيهات الأمنية: للمطورين فقط.
+    match /alerts/{id} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // محفوظات النشاط (سجل اللف/الإعلانات): المستخدم يرى سجله، المطور يرى الكل.
+    match /users/{uid}/activity/{id} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if false;
+    }
+
+    // الدردشة مع الدعم: المستخدم يرى محادثته فقط، المطور يرى الكل.
+    // الإرسال نفسه يتم عبر Cloud Functions لمنع التلاعب بالحقل from.
+    match /supportChats/{uid}/messages/{id} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if false;
+    }
+    match /supportChats/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if false;
+    }
+  }
+}

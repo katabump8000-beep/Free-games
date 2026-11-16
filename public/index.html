@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Free Games</title>
+<style>
+:root{
+  --bg-1:#0a0505; --bg-2:#1a0606; --surface:#160808; --surface-2:#200a0a;
+  --red:#c4172c; --red-dark:#7a0f1c; --maroon:#4b0e14; --gold:#d8a53d;
+  --text:#f3e7e7; --text-dim:#b98e8e; --ok:#2fae66; --err:#d8363f;
+  --radius:18px; --font: 'Tahoma', 'Segoe UI', sans-serif;
+}
+*{box-sizing:border-box; margin:0; padding:0; font-family:var(--font);}
+html,body{height:100%; background:var(--bg-1); color:var(--text); overflow-x:hidden;}
+body{
+  background:
+    radial-gradient(circle at 50% 0%, var(--maroon) 0%, transparent 60%),
+    radial-gradient(circle at 20% 90%, rgba(196,23,44,.15) 0%, transparent 50%),
+    var(--bg-1);
+  min-height:100vh;
+  position:relative;
+}
+#bgfx{position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.55;}
+.app{position:relative; z-index:1; max-width:480px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column;}
+
+/* top bar */
+.topbar{display:flex; align-items:center; justify-content:space-between; padding:14px 16px; position:relative;}
+.dev-hit{position:absolute; top:0; right:0; width:38px; height:38px; opacity:0; z-index:5;}
+.user-chip{display:flex; align-items:center; gap:8px; background:linear-gradient(135deg,var(--surface),var(--surface-2)); border:1px solid rgba(216,165,61,.25); padding:6px 12px; border-radius:30px;}
+.user-chip .name{font-size:13px; color:var(--text-dim);}
+.coin-chip{display:flex; align-items:center; gap:6px; background:linear-gradient(135deg,var(--surface-2),var(--maroon)); border:1px solid var(--gold); padding:6px 14px; border-radius:30px; box-shadow:0 0 14px rgba(216,165,61,.25);}
+.coin-chip svg{width:22px; height:22px;}
+.coin-chip .amt{font-weight:700; font-size:15px; letter-spacing:.5px;}
+.icon-btn{width:40px; height:40px; border-radius:12px; background:var(--surface); border:1px solid rgba(255,255,255,.08); display:flex; align-items:center; justify-content:center; color:var(--text); cursor:pointer;}
+.icon-btn svg{width:20px;height:20px;}
+
+/* wheel mini launcher */
+.wheel-fab{position:relative; width:46px; height:46px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #7a0f1c, #2a0607); border:2px solid var(--gold); display:flex; align-items:center; justify-content:center; cursor:pointer;}
+.wheel-fab svg{width:24px;height:24px;}
+.wheel-fab.ready{animation:glow 1.4s ease-in-out infinite;}
+.ping{position:absolute; top:-3px; left:-3px; width:12px; height:12px; border-radius:50%; background:var(--red); box-shadow:0 0 8px var(--red); display:none;}
+.wheel-fab.ready .ping{display:block; animation:pulse 1.2s infinite;}
+@keyframes glow{0%,100%{box-shadow:0 0 6px rgba(216,165,61,.4)} 50%{box-shadow:0 0 18px rgba(216,165,61,.9)}}
+@keyframes pulse{0%{transform:scale(1); opacity:1} 70%{transform:scale(1.8); opacity:0} 100%{opacity:0}}
+
+/* nav row */
+.nav-row{display:flex; gap:10px; padding:4px 16px 10px; overflow-x:auto;}
+.nav-row button{flex:none; background:var(--surface); color:var(--text-dim); border:1px solid rgba(255,255,255,.06); padding:8px 16px; border-radius:20px; font-size:13px; cursor:pointer;}
+.nav-row button.active{color:#fff; background:linear-gradient(135deg,var(--red),var(--red-dark)); border-color:var(--red);}
+
+/* main stage */
+.stage{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding:20px 16px 90px; gap:22px;}
+.view{width:100%; display:none; flex-direction:column; align-items:center; gap:18px;}
+.view.active{display:flex;}
+
+.big-btn-wrap{position:relative; width:230px; height:230px; margin-top:10px;}
+.big-btn{width:100%; height:100%; border-radius:50%; border:none; cursor:pointer;
+  background:radial-gradient(circle at 35% 30%, #e23a4d, #8b0f1f 60%, #3a0509);
+  box-shadow:0 0 30px rgba(196,23,44,.55), inset 0 0 40px rgba(0,0,0,.4);
+  color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+  animation:breathe 2.6s ease-in-out infinite;
+}
+@keyframes breathe{0%,100%{transform:scale(1)} 50%{transform:scale(1.035)}}
+.big-btn .hd{font-size:12px; letter-spacing:3px; color:var(--gold); opacity:.9;}
+.big-btn .lbl{font-size:19px; font-weight:700;}
+.big-btn .sub{font-size:12px; color:#ffd9d9;}
+.big-btn svg{width:46px;height:46px;}
+
+.ad-stats{font-size:12px; color:var(--text-dim); text-align:center;}
+
+.card{width:100%; background:linear-gradient(160deg,var(--surface),var(--surface-2)); border:1px solid rgba(255,255,255,.06); border-radius:var(--radius); padding:16px;}
+.card h3{font-size:15px; margin-bottom:10px; color:var(--gold);}
+
+.shop-row{display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid rgba(255,255,255,.05);}
+.shop-row:last-child{border-bottom:none;}
+.shop-row .l{font-size:13px;}
+.shop-row .l b{color:#fff;}
+.shop-row button{background:linear-gradient(135deg,var(--red),var(--red-dark)); color:#fff; border:none; padding:7px 14px; border-radius:10px; font-size:12px; cursor:pointer;}
+.shop-row button:disabled{opacity:.4;}
+
+.pending-box{width:100%; text-align:center; padding:26px 14px; background:var(--surface); border-radius:var(--radius); border:1px dashed var(--gold);}
+.pending-box .t{font-size:13px; color:var(--gold); margin-bottom:6px;}
+.pending-box .s{font-size:12px; color:var(--text-dim);}
+
+/* modal */
+.modal-bg{position:fixed; inset:0; background:rgba(0,0,0,.72); z-index:50; display:none; align-items:center; justify-content:center; padding:18px;}
+.modal-bg.show{display:flex;}
+.modal{width:100%; max-width:420px; max-height:88vh; overflow:auto; background:linear-gradient(160deg,#1c0909,#130505); border:1px solid rgba(216,165,61,.3); border-radius:20px; padding:18px; position:relative;}
+.modal .x{position:absolute; top:10px; left:10px; cursor:pointer; color:var(--text-dim); font-size:20px;}
+.modal h2{font-size:16px; color:var(--gold); margin-bottom:14px;}
+
+input,select,textarea{width:100%; background:#140606; border:1px solid rgba(255,255,255,.12); color:#fff; padding:10px 12px; border-radius:10px; font-size:14px; margin-bottom:10px;}
+label{font-size:12px; color:var(--text-dim); display:block; margin-bottom:4px;}
+.btn{width:100%; padding:11px; border:none; border-radius:12px; background:linear-gradient(135deg,var(--red),var(--red-dark)); color:#fff; font-size:14px; font-weight:700; cursor:pointer;}
+.btn.ghost{background:transparent; border:1px solid rgba(255,255,255,.2); color:var(--text);}
+.btn.ok{background:linear-gradient(135deg,#2fae66,#1c7544);}
+.btn.danger{background:linear-gradient(135deg,#d8363f,#7a1317);}
+.row2{display:flex; gap:8px;}
+.row2 > *{flex:1;}
+
+/* wheel */
+.wheel-area{position:relative; width:270px; height:270px; margin:10px auto;}
+.wheel-svg{width:100%; height:100%; transition:transform 4.5s cubic-bezier(.17,.67,.1,1);}
+.wheel-pin{position:absolute; top:-6px; left:50%; transform:translateX(-50%); width:0; height:0; border-left:12px solid transparent; border-right:12px solid transparent; border-top:20px solid var(--gold); z-index:3;}
+
+.toast{position:fixed; bottom:16px; left:50%; transform:translateX(-50%); background:#1c0909; border:1px solid var(--gold); color:#fff; padding:10px 18px; border-radius:30px; font-size:13px; z-index:99; display:none;}
+
+.bottom-nav{position:fixed; bottom:0; left:0; right:0; z-index:10; background:linear-gradient(0deg,#0d0404,rgba(13,4,4,.0)); backdrop-filter:blur(6px);}
+.bottom-nav-inner{max-width:480px; margin:0 auto; display:flex; justify-content:space-around; padding:10px 8px 16px;}
+.bn-item{display:flex; flex-direction:column; align-items:center; gap:4px; color:var(--text-dim); font-size:11px; cursor:pointer;}
+.bn-item.active{color:var(--gold);}
+.bn-item svg{width:22px;height:22px;}
+
+.theme-dot{width:34px; height:34px; border-radius:50%; cursor:pointer; border:2px solid transparent;}
+.theme-dot.sel{border-color:#fff;}
+.theme-grid{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:14px;}
+
+.chat-box{display:flex; flex-direction:column; gap:8px; max-height:50vh; overflow:auto; padding:6px 2px;}
+.msg{max-width:80%; padding:8px 12px; border-radius:14px; font-size:13px;}
+.msg.me{align-self:flex-end; background:linear-gradient(135deg,var(--red),var(--red-dark));}
+.msg.dev{align-self:flex-start; background:var(--surface-2); border:1px solid rgba(255,255,255,.08);}
+
+.tour-card{width:100%; border-radius:16px; overflow:hidden; position:relative; min-height:150px; display:flex; flex-direction:column; justify-content:flex-end; padding:14px; background-size:cover; background-position:center;}
+.tour-card::before{content:''; position:absolute; inset:0; background:rgba(10,4,4,.55);}
+.tour-card > *{position:relative; z-index:1;}
+.tour-card .prize{display:inline-flex; align-items:center; gap:6px; background:rgba(0,0,0,.5); padding:4px 10px; border-radius:20px; font-size:12px; width:fit-content; margin-bottom:6px;}
+.tour-card .timer{font-size:13px; color:var(--gold); font-weight:700;}
+.tour-card .title{font-size:17px; font-weight:800; margin-bottom:4px;}
+
+.admin-section{display:none;}
+.admin-section.active{display:block;}
+.admin-tabs{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px;}
+.admin-tabs button{font-size:11px; padding:6px 10px;}
+
+.flag-row{display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,.05); font-size:12px;}
+
+table.simple{width:100%; border-collapse:collapse; font-size:12px;}
+table.simple th,table.simple td{padding:6px 4px; text-align:right; border-bottom:1px solid rgba(255,255,255,.06);}
+
+.prob-bar{width:100%; height:8px; border-radius:6px; background:rgba(255,255,255,.08); overflow:hidden; margin-top:4px;}
+.prob-bar i{display:block; height:100%; background:linear-gradient(90deg,var(--gold),var(--red));}
+</style>
+</head>
+<body>
+<canvas id="bgfx"></canvas>
+<div class="app" id="app">
+
+  <div class="topbar">
+    <div class="dev-hit" id="devHit"></div>
+    <div class="user-chip"><span class="name" id="userNameLbl">ضيف</span></div>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <div class="wheel-fab" id="wheelFab">
+        <span class="ping"></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg>
+      </div>
+      <div class="coin-chip" id="coinChip">
+        <svg viewBox="0 0 40 40"><defs><linearGradient id="tg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f3d27a"/><stop offset="100%" stop-color="#b8821f"/></linearGradient></defs>
+          <polygon points="20,2 35,11 35,29 20,38 5,29 5,11" fill="url(#tg)" stroke="#7a4e0f" stroke-width="1.5"/>
+          <polygon points="20,9 29,14.5 29,25.5 20,31 11,25.5 11,14.5" fill="#7a0f1c" opacity=".85"/>
+          <text x="20" y="23" text-anchor="middle" font-size="11" font-weight="700" fill="#f3d27a" font-family="Tahoma">FG</text>
+        </svg>
+        <span class="amt" id="pointsLbl">0</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage">
+
+    <!-- HOME -->
+    <div class="view active" id="view-home">
+      <div class="big-btn-wrap">
+        <button class="big-btn" id="adBtn">
+          <span class="hd">HD • إعلان</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><path d="M8 5v14l11-7z"/></svg>
+          <span class="lbl">شاهد إعلانا</span>
+          <span class="sub" id="adRewardSub">مقابل — نقطة</span>
+        </button>
+      </div>
+      <div class="ad-stats" id="adStatsLbl">شاهدت 0 إعلان اليوم</div>
+
+      <div class="card">
+        <h3>آخر النشاطات</h3>
+        <div id="activityList" style="font-size:12px; color:var(--text-dim);">لا يوجد نشاط بعد</div>
+      </div>
+    </div>
+
+    <!-- REDEEM -->
+    <div class="view" id="view-redeem">
+      <div id="redeemPendingBox" class="pending-box" style="display:none;">
+        <div class="t" id="pendingTitle">تم إرسال طلبك إلى المطورين</div>
+        <div class="s">يجري التحقق منه والرد عليك خلال أقل من 4 ساعات. نضمن لك وصول جواهرك في أقرب وقت ممكن.</div>
+      </div>
+      <div id="redeemCatalog" style="width:100%; display:flex; flex-direction:column; gap:14px;"></div>
+    </div>
+
+    <!-- TOURNAMENTS -->
+    <div class="view" id="view-tours">
+      <div id="toursList" style="width:100%; display:flex; flex-direction:column; gap:14px;"></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="view" id="view-settings">
+      <div class="card" style="width:100%;">
+        <h3>المظهر</h3>
+        <label>لون الواجهة</label>
+        <div class="theme-grid" id="themeGrid"></div>
+        <label>حجم الخط</label>
+        <input type="range" id="fontRange" min="13" max="19" value="15">
+      </div>
+      <div class="card" style="width:100%;">
+        <h3>الحساب</h3>
+        <div style="font-size:13px; color:var(--text-dim);" id="accountEmailLbl">—</div>
+      </div>
+      <button class="btn" id="openSupportBtn">تواصل مع المطورين</button>
+      <button class="btn ghost" id="logoutBtn">تسجيل الخروج</button>
+    </div>
+
+    <!-- ADMIN -->
+    <div class="view" id="view-admin">
+      <div class="admin-tabs">
+        <button data-a="wheel" class="btn-tab active">العجلة</button>
+        <button data-a="ads" class="btn-tab">الإعلانات</button>
+        <button data-a="catalog" class="btn-tab">قائمة الاستبدال</button>
+        <button data-a="requests" class="btn-tab">الطلبات</button>
+        <button data-a="users" class="btn-tab">المستخدمون</button>
+        <button data-a="alerts" class="btn-tab">التنبيهات</button>
+        <button data-a="tours" class="btn-tab">البطولات</button>
+        <button data-a="support" class="btn-tab">الدعم</button>
+      </div>
+
+      <div class="admin-section active" id="ad-wheel">
+        <div class="card"><h3>إعدادات العجلة (12 خانة)</h3><div id="wheelEditor"></div>
+          <button class="btn" id="saveWheelBtn" style="margin-top:10px;">حفظ العجلة</button></div>
+      </div>
+      <div class="admin-section" id="ad-ads">
+        <div class="card"><h3>مكافأة الإعلان</h3>
+          <label>نقاط لكل إعلان</label><input id="adPointsInput" type="number">
+          <label>الحد الأقصى يوميا</label><input id="adDailyCapInput" type="number">
+          <label>أقل فاصل بين إعلانين (ثانية)</label><input id="adMinGapInput" type="number">
+          <button class="btn" id="saveAdSettingsBtn">حفظ</button>
+        </div>
+      </div>
+      <div class="admin-section" id="ad-catalog">
+        <div class="card"><h3>قائمة الاستبدال</h3><div id="catalogEditor"></div>
+          <button class="btn ghost" id="addCatalogRowBtn">+ إضافة خانة لعبة</button></div>
+      </div>
+      <div class="admin-section" id="ad-requests">
+        <div class="card"><h3>طلبات الاستبدال</h3><div id="requestsList"></div></div>
+      </div>
+      <div class="admin-section" id="ad-users">
+        <div class="card"><h3>أكثر المستخدمين نقاطا</h3><div id="usersList"></div></div>
+      </div>
+      <div class="admin-section" id="ad-alerts">
+        <div class="card"><h3>تنبيهات النشاط المشبوه</h3><div id="alertsList"></div></div>
+      </div>
+      <div class="admin-section" id="ad-tours">
+        <div class="card"><h3>البطولات</h3><button class="btn ghost" id="newTourBtn">+ إنشاء بطولة</button><div id="toursAdminList" style="margin-top:10px;"></div></div>
+      </div>
+      <div class="admin-section" id="ad-support">
+        <div class="card"><h3>رسائل الدعم</h3><div id="supportThreads"></div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="bottom-nav"><div class="bottom-nav-inner" id="bottomNav">
+    <div class="bn-item active" data-v="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 11l9-7 9 7"/><path d="M5 10v9h14v-9"/></svg>الرئيسية</div>
+    <div class="bn-item" data-v="redeem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 11h18M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>استبدال</div>
+    <div class="bn-item" data-v="tours"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 01-10 0V4z"/></svg>بطولات</div>
+    <div class="bn-item" data-v="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 112.8-2.8l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.6-1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>الإعدادات</div>
+    <div class="bn-item" id="adminNavItem" data-v="admin" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg>المطور</div>
+  </div></div>
+</div>
+
+<!-- AUTH MODAL -->
+<div class="modal-bg show" id="authModal">
+  <div class="modal">
+    <h2 id="authTitle">تسجيل الدخول</h2>
+    <label>البريد الإلكتروني</label><input id="authEmail" type="email">
+    <label>كلمة المرور</label><input id="authPass" type="password">
+    <label id="authNameWrap">الاسم<input id="authName" type="text" style="margin-top:4px;"></label>
+    <button class="btn" id="authSubmitBtn">دخول</button>
+    <div style="text-align:center; margin-top:10px; font-size:12px; color:var(--text-dim); cursor:pointer;" id="authSwitchMode">ليس لدي حساب؟ إنشاء حساب</div>
+    <div id="authErr" style="color:var(--err); font-size:12px; margin-top:8px; text-align:center;"></div>
+  </div>
+</div>
+
+<!-- DEV GATE MODAL -->
+<div class="modal-bg" id="devGateModal">
+  <div class="modal"><span class="x" data-close>×</span>
+    <h2>وضع المطور</h2>
+    <label>كلمة السر</label><input id="devPassInput" type="password">
+    <button class="btn" id="devPassSubmit">متابعة</button>
+    <div id="devGateErr" style="color:var(--err); font-size:12px; margin-top:8px;"></div>
+  </div>
+</div>
+
+<!-- WHEEL MODAL -->
+<div class="modal-bg" id="wheelModal">
+  <div class="modal" style="text-align:center;"><span class="x" data-close>×</span>
+    <h2>عجلة الحظ</h2>
+    <div class="wheel-area"><div class="wheel-pin"></div><svg id="wheelSvg" class="wheel-svg" viewBox="0 0 200 200"></svg></div>
+    <button class="btn" id="spinBtn">لف العجلة</button>
+    <div id="wheelCooldownLbl" style="font-size:12px; color:var(--text-dim); margin-top:8px;"></div>
+  </div>
+</div>
+
+<!-- SUPPORT MODAL -->
+<div class="modal-bg" id="supportModal">
+  <div class="modal"><span class="x" data-close>×</span>
+    <h2>خدمة الدعم</h2>
+    <div class="chat-box" id="chatBox"></div>
+    <div class="row2" style="margin-top:10px;">
+      <input id="chatInput" placeholder="اكتب رسالتك...">
+      <button class="btn" id="chatSendBtn" style="flex:none; width:70px;">إرسال</button>
+    </div>
+  </div>
+</div>
+
+<!-- GENERIC CONFIRM TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
+<script src="firebase-init.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
